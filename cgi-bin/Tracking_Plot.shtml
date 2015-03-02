@@ -154,17 +154,21 @@ function create_plot(System,Freq,Signal) {
       xhrFields: {
        onprogress: function(evt)
            {
-               if (evt.loaded > 4000000) {
-                   every=60
-                   }
-               else {
-                   if (evt.loaded > 500000) {
-                       every=15
-                       }
-                   else {
-                       every=1
-                       }
-                    }
+//               if (evt.loaded > 4000000) {
+//                   every=60
+//                   every=1
+//                   }
+//               else {
+//                   if (evt.loaded > 500000) {
+//                       every=15
+//                       every=1
+//                       }
+//                   else {
+//                       every=1
+//                       }
+//
+//                   }
+
               if (evt.lengthComputable) {
                  var percentComplete = evt.loaded / evt.total*100;
                  $("#status").text("Loaded " + ~~(percentComplete) + '%')
@@ -198,7 +202,8 @@ function create_plot(System,Freq,Signal) {
                 Az=parseInt(items[3])
                 time=items[0]
                 if ((last_slip[sv]==-1) || (last_slip[sv]==current_slip)) {
-                    if ((Elev != last_Elev[sv]) || (Az != last_Az[sv]) || ((time % every)==0)) {
+//                    if ((Elev != last_Elev[sv]) || (Az != last_Az[sv])) {
+//                    if ((Elev != last_Elev[sv]) || (Az != last_Az[sv]) || ((time % every)==0)) {
 //                      console.log("Time: " + time)
 //                      console.log("Every: " + every)
 
@@ -212,7 +217,7 @@ function create_plot(System,Freq,Signal) {
                         last_Elev[sv]=Elev
                         last_Az[sv]=Az
                         last_Every[sv]=0
-                        }
+//                        }
                     last_Every[sv]++
                     }
                 else {
