@@ -10,10 +10,16 @@ my $safe_filename_characters = "a-zA-Z0-9_.-";
 
 my $filename = $query->param('file');
 my $project = $query->param('project');
+my $Decimate = $query->param('Decimate');
 
-if (defined ($project) && ($project != "")) {
-    $project="/".$project;
-   }
+if (defined ($project)) {
+    if  ($project) {
+        $project="/".$project;
+        }
+    else  {
+        $project="";
+        }
+}
 else {
     $project="";
 }
@@ -55,9 +61,9 @@ else
 print $query->header ( );
 #print "Content-type: text/html\n\n";
 print "<html><head>";
-print '<link rel="stylesheet" type="text/css" href="/tcui-styles.css">';
+print '<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">';
 print "<meta http-equiv=\"refresh\" content=\"5; url=/results/Tracking$project/$name\">";
-
+print "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\" />";
 print "<title>Plotting GNSS Tracking Data</title></head><body><h1>Processing $filename:</h1>\n";
 
 #print "Project: *$project*";
@@ -97,4 +103,4 @@ print "Data is being processed: This will normally takes a few seconds but can t
 print "The graphs will be at \<a href=\"/results/Tracking$project/$name\"\>/results/Tracking$project/$name/\</a\>\n";
 print "<p/>Processing will continue if you navigate away from this page<br/>";
 print "<pre>\n";
-system "./start_single.sh",$upload_file,$extension,$TrimbleTools,$project
+system "./start_single.sh",$upload_file,$extension,$TrimbleTools,$Decimate,$project
