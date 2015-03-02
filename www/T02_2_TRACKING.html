@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<link rel="stylesheet" type="text/css" href="/css/tcui-styles.css">
+<title>Plot Tracking for a GNSS file</title>
+ </head>
+<body class="page">
+<div class="container clearfix">
+  <div style="padding: 10px 10px 10px 0 ;"> <a href="http://construction.trimble.com/">
+        <img src="/images/trimble-logo.jpg" alt="Trimble Logo" id="logo"> </a>
+      </div>
+  <!-- end #logo-area --> 
+</div>
+<div id="top-header-trim"></div>
+<div id="content-area">
+<div id="content">
+<div id="main-content" class="clearfix">
+<form action="/cgi-bin/Tracking/T02_2_Tracking.pl" method="post" enctype="multipart/form-data" >
+<table border="1">
+<tr>
+<td>
+GNSS File:
+</td>
+<td>
+<input type="file" name="file"/>
+</td>
+</tr>
+<tr>
+<td>
+Project (Optional, Case Sensitive):
+</td>
+<td>
+<input type="text" name="project"/>
+</td>
+</tr>
+</table><br/>
+<input type="submit" value="Submit" />
+</div>
+</div>
+</div>
+</form>
+</body>
+</html>
