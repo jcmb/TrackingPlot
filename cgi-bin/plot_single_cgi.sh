@@ -1,5 +1,5 @@
 #! /bin/bash
-echo $1 "*" $2 "*" $3 "*" $4 "*" $5 "*<br>"
+#echo $1 "*" $2 "*" $3 "*" $4 "*" $5 "*<br>"
 Ext=$2
 FileFull=`basename $1`;
 File=`basename $1 $2`;
@@ -12,16 +12,20 @@ Project=$5
 PATH=${normalDir}:~/bin:$PATH
 
 
-#mkdir -p ~/public_html/results/TRACKING/$File
-#cd ~/public_html/results/TRACKING/$Fil
-TMP_DIR=~/tmp
+if [ "$TrimbleTools" = 1 ]
+then
+   echo "TrimbleTools" 
+   mkdir -p ~/public_html/results/Tracking$Project/$File
+   cd ~/public_html/results/Tracking$Project/$File  && rm * 2> /dev/null
+   TMP_DIR=~/tmp
+else
+    echo "Non Trimble Tools"
+    mkdir -p /var/www/html/results/Tracking$Project/$File
+    cd /var/www/html/results/Tracking$Project/$File && rm * 2> /dev/null
+    TMP_DIR=/run/shm
+fi
 
-mkdir -p /var/www/html/results/Tracking$Project/$File
-cd /var/www/html/results/Tracking$Project/$File
-TMP_DIR=/run/shm
 
-
-rm * 2> /dev/null
 
 #set -o verbose
 #set -o xtrace
