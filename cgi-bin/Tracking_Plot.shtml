@@ -208,7 +208,7 @@ function create_plot(System,Freq,Signal) {
 //                      console.log("Every: " + every)
 
                         options.series[sv].data.push({
-                            x:time*1000,
+                            x:time,
                             y:sv+1,
                             Elev: Elev,
                             Az: Az,
@@ -222,7 +222,7 @@ function create_plot(System,Freq,Signal) {
                     }
                 else {
                     options.series[sv].data.push({
-                        x: time*1000,
+                        x: time,
                         y: sv+1,
                         Elev: Elev,
                         Az:   Az,
