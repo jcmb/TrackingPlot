@@ -11,6 +11,8 @@ my $safe_filename_characters = "a-zA-Z0-9_.-";
 my $filename = $query->param('file');
 my $project = $query->param('project');
 my $Decimate = $query->param('Decimate');
+my $TrimbleTools=1;
+
 
 if (defined ($project)) {
     if  ($project) {
@@ -69,7 +71,6 @@ print "<title>Plotting GNSS Tracking Data</title></head><body><h1>Processing $fi
 #print "Project: *$project*";
 
 #print $filename."\n";
-my $TrimbleTools=0;
 my $upload_file="";
 
 if ($TrimbleTools) {
