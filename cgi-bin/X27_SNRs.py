@@ -128,7 +128,7 @@ for line in sys.stdin:
    SV_Last_Epoch[System][SV_int]=Current_Epoch
 
    for band in range (MAX_BANDS):
-#      print "band", band 
+#      print "band", band
       if fields[12+band *FIELDS_PER_BAND] :
 #         print "*",fields[11+ band*12],"*"
 #         pprint.pprint(fields)
@@ -150,7 +150,7 @@ for line in sys.stdin:
                 print "Error: " + str(Current_Epoch) + "," + SV + "," + str(System) + "," + str(Freq) + "," + str(Tracking)
                 print "Error: " + System_Names[System] + "," + Freq_Names[Freq] + "," + Tracking_Names[Tracking]
                 quit()
-         Files[System][Freq][Tracking].write(fields[0]+","+ SV + "," + fields[10] + ","+ fields[9] + "," +fields[16+ band*FIELDS_PER_BAND]+ "," +fields[18 + band*FIELDS_PER_BAND] +"\n")
+         Files[System][Freq][Tracking].write(str(Current_Epoch)+","+ SV + "," + fields[10] + ","+ fields[9] + "," +fields[16+ band*FIELDS_PER_BAND]+ "," +fields[18 + band*FIELDS_PER_BAND] +"\n")
 
 #   print System, SV_Tracking
 #   print "In Try"
@@ -170,7 +170,7 @@ for line in sys.stdin:
       print "Error: " + System_Names[System] + "," + SV
       quit()
 
-#   print System, SV_int 
+#   print System, SV_int
    if System == 0 : # GPS L1 C/A, L2 E, L2 CS, L5 I&Q
 
       SV_Files[System][SV_int].write(str(Current_Epoch)+ "," + fields[10] + "," + fields[9] + ',' + SV_SNR.get(0,"") +  ',' + SV_Slip.get(0,"") + ',' + SV_SNR.get(52,"") + ',' + SV_Slip.get(52,"") + ','+ SV_SNR.get(55,"") + ','+ SV_Slip.get(55,"")+ ',' + SV_SNR.get(108,"") + ',' + SV_Slip.get(108,"")+"\n")
