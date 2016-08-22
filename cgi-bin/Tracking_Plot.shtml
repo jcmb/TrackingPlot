@@ -51,12 +51,15 @@ function create_plot(System,Freq,Signal) {
         Min_SVs=1;
         Max_SVs=32;
         }
+    if (System == "GAL") {
+        Min_SVs=1;
+        Max_SVs=30;
+        }
 
     if (System == "GLONASS") {
         Min_SVs=1;
         Max_SVs=24;
         }
-
 
     if (System == "SBAS") {
 //        Max_SVs=39;
@@ -201,7 +204,8 @@ function create_plot(System,Freq,Signal) {
                 Elev=parseInt(items[2])
                 Az=parseInt(items[3])
                 time=items[0]
-                if ((last_slip[sv]==-1) || (last_slip[sv]==current_slip)) {
+                if ((last_slip[sv]==-1) || (last_slip[sv]==current_slip) || (Math.abs(last_slip[sv]-current_slip)>5)) {
+// If the slip differnece is > 5 then we assume it is a combined T02 file and don't treat it as a slip for indication
 //                    if ((Elev != last_Elev[sv]) || (Az != last_Az[sv])) {
 //                    if ((Elev != last_Elev[sv]) || (Az != last_Az[sv]) || ((time % every)==0)) {
 //                      console.log("Time: " + time)

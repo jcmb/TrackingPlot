@@ -3,40 +3,44 @@
 #import fileinput
 import pprint
 import sys
+import datetime
+import calendar
 
 if (len(sys.argv)>1):
+
+    GPS_Zero = datetime.datetime(1980, 1,6, 0, 0)
+    GPS_Zero=calendar.timegm(GPS_Zero.timetuple())*1000
+
     GPS_Week=sys.argv[1]
-    GPS_Week_MSecs=int(GPS_Week)*7*24*60*1000
+    GPS_Week_MSecs=int(GPS_Week)*7*24*60*60*1000
+    GPS_Week_MSecs+=GPS_Zero
 else:
     GPS_Week_MSecs=0
 
-#print "GPS Offset: " + str(GPS_Week_MSecs)
+print "GPS Offset: " + str(GPS_Week_MSecs)
 
 MAX_BANDS=6
-FIELDS_PER_BAND=10
+FIELDS_PER_BAND=12
+#FIELDS_PER_BAND=10
 
 #MAX_BANDS=6
 #FIELDS_PER_BAND=12
 #last_file=""
-System_Names=["GPS","SBAS","GLONASS","Galieo","QZSS","N/A","OmniSTAR","Compass","XPS","Other-1","BDS","Other"]
-Freq_Names=["L1","L2","L5","E5B","E5AB","E6","B1_E2","B3","E1","G3","XPS","E5A"]
 
-Tracking_Names=["CA","P","E","CSM","CSL","CS","I","Q","IQ","Y","M",
-    "BPSK_PD","BPSK_P","BPSK_D","ALTBOC_C_PD","ALTBOC_C_P","ALTBOC_C_D","ALTBOC_PD","L2ENH_X","L1ENH_X",
-    "BOC_1_1_PD","BOC_1_1_P","BOC_1_1_D","MBOC_1_1_PD","MBOC_1_1_P","MBOC_1_1_D",
-    "BPSK2_B1","BPSK2_B1_2","BPSK2_B2","BPSK2_B3",
-    "SAIF","LEX","G3_PD","G3_P","G3_D","XPS","E6_PD","E6_P","E6_D"]
+from GNSS_Decls import System_Names, Freq_Names, Tracking_Names, Expected_SNR
+
 
 #print Tracking_Names[11]
 #quit()
 
 #Files[0:len(System_Names)]=0
+
 Files = [[[None] * len (Tracking_Names)] * len (Freq_Names)] * len(System_Names)
 Files = [None] * len(System_Names)
 SV_Files = [None] * len(System_Names)
 SV_Last_Epoch = [None] * len(System_Names)
 
-MAX_SVs=40
+MAX_SVs=255
 for s in range(len(System_Names)): #Make the 2D arrays to store the SV Dependent information. So wish there are real records in python.
     Files[s]=[None] * len (Freq_Names)
     SV_Files[s] = [None] * MAX_SVs # Yes this is to many but we don't care. The SBAS PRN's are 120-158 are moved down to 1..39 in the range
@@ -115,6 +119,10 @@ for line in sys.stdin:
                        SV_Files[SV_Sys][SV_Num].write(str(Last_Epoch)+",,,,,,\n")
                      elif SV_Sys == 2 : # GLONASS, L1 C/A, L1 P, L2 P
                        SV_Files[SV_Sys][SV_Num].write(str(Last_Epoch)+",,,,,,,,\n")
+                     elif SV_Sys == 3 : # GAL, 2
+                       SV_Files[SV_Sys][SV_Num].write(str(Last_Epoch)+",,,,,,\n")
+                     elif SV_Sys == 10 : # GAL, L1, ,
+                       SV_Files[SV_Sys][SV_Num].write(str(Last_Epoch)+",,,,,,\n")
                      #      Files[System][Freq][Tracking].write(fields[0]+","+ fields[5] + "," + fields[10] + ","+ fields[9] + "," +fields[16+ band*10]+ "," +fields[18 + band*10] +"\n")
                      SV_Last_Epoch[SV_Sys][SV_Num]=None
       Last_Epoch=Current_Epoch
@@ -126,17 +134,34 @@ for line in sys.stdin:
    SV=fields[5]
 #   print System,SV_int,Current_Epoch
    SV_Last_Epoch[System][SV_int]=Current_Epoch
+   Viewdat_Error_Hack=0
+
+
+# The current 6.192 version of viewdat has an error in which it only outputs 10 blank fields for a band without observations, instead of the standard 12. 
+# This was added when the number of fields per bands went from 10 to 12.                                                                                                                                                        
+# So if the range is 0 (blank), we add 2 to the hack so the next band is in the right place.
+
+#   pprint.pprint(fields)
 
    for band in range (MAX_BANDS):
-#      print "band", band
-      if fields[12+band *FIELDS_PER_BAND] :
+#      print "band", band , " Hack ", Viewdat_Error_Hack, " Range ", fields[14+ band*FIELDS_PER_BAND - Viewdat_Error_Hack]
+      if fields[14+ band*FIELDS_PER_BAND - Viewdat_Error_Hack] == "" :
+          Viewdat_Error_Hack+=2
+#          print "Time",Current_Epoch,"SV",SV,"band", band , " Hack ", Viewdat_Error_Hack, " Range ", fields[14+ band*FIELDS_PER_BAND - Viewdat_Error_Hack]
+#          print "Viewdat Error Hack: ",Viewdat_Error_Hack
+      else : #  fields[12+band *FIELDS_PER_BAND - Viewdat_Error_Hack] :
 #         print "*",fields[11+ band*12],"*"
-#         pprint.pprint(fields)
 #         pprint.pprint(int(fields[11+ band*FIELDS_PER_BAND],base=10))
-         Freq = int(fields[11+ band*FIELDS_PER_BAND],base=10)
-         Tracking= int(fields[12+ band*FIELDS_PER_BAND], base=10)
-         SV_SNR[Freq*50 + Tracking] = fields[16+ band*FIELDS_PER_BAND]
-         SV_Slip[Freq*50 + Tracking] = fields[18+ band*FIELDS_PER_BAND]
+         Freq = int(fields[11+ band*FIELDS_PER_BAND - Viewdat_Error_Hack],base=10)
+         Tracking= int(fields[12+ band*FIELDS_PER_BAND - Viewdat_Error_Hack], base=10)
+         SV_SNR[Freq*50 + Tracking] = fields[16+ band*FIELDS_PER_BAND - Viewdat_Error_Hack]
+         SV_Slip[Freq*50 + Tracking] = fields[18+ band*FIELDS_PER_BAND - Viewdat_Error_Hack]
+
+#         if System==10:
+#            print System,SV_int,band,Freq,Tracking,Viewdat_Error_Hack,Freq*50 + Tracking
+#         print fields[14+ band*FIELDS_PER_BAND - Viewdat_Error_Hack]
+
+
 
          if  (Files[System][Freq][Tracking] is None) :
              filename = System_Names[System] + "-" + Freq_Names[Freq] + "-" + Tracking_Names[Tracking] + ".SNR"
@@ -150,7 +175,12 @@ for line in sys.stdin:
                 print "Error: " + str(Current_Epoch) + "," + SV + "," + str(System) + "," + str(Freq) + "," + str(Tracking)
                 print "Error: " + System_Names[System] + "," + Freq_Names[Freq] + "," + Tracking_Names[Tracking]
                 quit()
-         Files[System][Freq][Tracking].write(str(Current_Epoch)+","+ SV + "," + fields[10] + ","+ fields[9] + "," +fields[16+ band*FIELDS_PER_BAND]+ "," +fields[18 + band*FIELDS_PER_BAND] +"\n")
+
+         Elev=int(fields[10])
+         if Expected_SNR[System][Freq][Tracking]:
+             Files[System][Freq][Tracking].write(str(Current_Epoch)+","+ SV + "," + fields[10] + ","+ fields[9] + "," +fields[16+ band*FIELDS_PER_BAND]+ "," +fields[18 + band*FIELDS_PER_BAND] + "," + str(Expected_SNR[System][Freq][Tracking][Elev])+"\n")
+         else:
+             Files[System][Freq][Tracking].write(str(Current_Epoch)+","+ SV + "," + fields[10] + ","+ fields[9] + "," +fields[16+ band*FIELDS_PER_BAND]+ "," +fields[18 + band*FIELDS_PER_BAND] +"\n")
 
 #   print System, SV_Tracking
 #   print "In Try"
@@ -170,14 +200,26 @@ for line in sys.stdin:
       print "Error: " + System_Names[System] + "," + SV
       quit()
 
-#   print System, SV_int
+#   print System, SV_int, Elev
    if System == 0 : # GPS L1 C/A, L2 E, L2 CS, L5 I&Q
+      SV_Files[System][SV_int].write(str(Current_Epoch)+ "," + fields[10] + "," + fields[9] + ',' + SV_SNR.get(0,"") +  ',' + SV_Slip.get(0,"") + ',' + SV_SNR.get(52,"") + ',' + SV_Slip.get(52,"") + ','+ SV_SNR.get(55,"") + ','+ SV_Slip.get(55,"")+ ',' + SV_SNR.get(108,"") + ',' + SV_Slip.get(108,"") + "," + str(Expected_SNR[0][0][0][Elev]) + "," + str(Expected_SNR[0][1][2][Elev]) + "," + str(Expected_SNR[0][1][5][Elev]) + "," + str(Expected_SNR[0][2][8][Elev]) +"\n")
+   elif System == 1 : # SBAS GPS L1 C/A, L5 I
+      SV_Files[System][SV_int].write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(0,"") +  ',' + SV_Slip.get(0,"") + ',' + SV_SNR.get(106,"") + ',' + SV_Slip.get(106,"") + "\n")
+   elif System == 2 : # GLONASS, L1 C/A, L1 P, L2 C/A, L2 P
+#      if SV_int == 21 :
+#          sys.stderr.write("GLONASS 19\n")
+#          sys.stderr.write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(0,"") + ',' + SV_Slip.get(0,"") +  ',' + SV_SNR.get(1,"") +  ',' + SV_Slip.get(1,"")  + ',' + SV_SNR.get(50,"")  + ',' + SV_Slip.get(50,"")  + ',' + SV_SNR.get(51,"")  + ',' + SV_Slip.get(51,"") +  "," + str(Expected_SNR[2][0][0][Elev]) + "," + str(Expected_SNR[2][0][1][Elev]) + "," + str(Expected_SNR[2][2][0][Elev]) + "," + str(Expected_SNR[2][2][1][Elev]) +"\n")
+      SV_Files[System][SV_int].write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(0,"") + ',' + SV_Slip.get(0,"") +  ',' + SV_SNR.get(1,"") +  ',' + SV_Slip.get(1,"")  + ',' + SV_SNR.get(50,"")  + ',' + SV_Slip.get(50,"")  + ',' + SV_SNR.get(51,"")  + ',' + SV_Slip.get(51,"") +  "," + str(Expected_SNR[2][0][0][Elev]) + "," + str(Expected_SNR[2][0][1][Elev]) + "," + str(Expected_SNR[2][2][0][Elev]) + "," + str(Expected_SNR[2][2][1][Elev]) +"\n")
+   elif System == 3 : # GALILEO, L1 MBOC_1_1_PD, E5AB ALTBOC_C_PD,
+      SV_Files[System][SV_int].write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(23,"") +  ',' + SV_Slip.get(23,"") + ',' + SV_SNR.get(214,"") + ',' + SV_Slip.get(214,"")+"\n")
+   elif System == 4 : # QZSS, L1 CA, L1-BOC_1_1_PD, L1-SAIF, L2-CS, L5-IQ
+      SV_Files[System][SV_int].write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(0,"") +  ',' + SV_Slip.get(0,"") + ',' + SV_SNR.get(20,"") + ',' + SV_Slip.get(20,"")+','+ SV_SNR.get(55,"") + ','+ SV_Slip.get(55,"")+ ',' + SV_SNR.get(108,"") + ',' + SV_Slip.get(108,"")+"\n")
+   elif System == 10 : # BDS B1 BPSK2_B1, BPSK2_B2
+      SV_Files[System][SV_int].write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(178,"") +  ',' + SV_Slip.get(178,"") + ',' + SV_SNR.get(326,"") + ',' + SV_Slip.get(326,"")+"\n")
+#      for field in range(len(fields)):
+#          if fields[field]:
+#              print str(field) + ': ' + fields[field]
 
-      SV_Files[System][SV_int].write(str(Current_Epoch)+ "," + fields[10] + "," + fields[9] + ',' + SV_SNR.get(0,"") +  ',' + SV_Slip.get(0,"") + ',' + SV_SNR.get(52,"") + ',' + SV_Slip.get(52,"") + ','+ SV_SNR.get(55,"") + ','+ SV_Slip.get(55,"")+ ',' + SV_SNR.get(108,"") + ',' + SV_Slip.get(108,"")+"\n")
-   elif System == 1 : # GPS L1 C/A, L5 I
-      SV_Files[System][SV_int].write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(0,"") +  ',' + SV_Slip.get(0,"") + ',' + SV_SNR.get(106,"") + ',' + SV_Slip.get(106,"")+"\n")
-   elif System == 2 : # GLONASS, L1 C/A, L1 P, L2 P
-      SV_Files[System][SV_int].write(str(Current_Epoch)+"," + fields[10] + ","+ fields[9] + ',' + SV_SNR.get(0,"") + ',' + SV_Slip.get(0,"") +  ',' + SV_SNR.get(1,"") +  ',' + SV_Slip.get(1,"")  + ',' + SV_SNR.get(50,"")  + ',' + SV_Slip.get(50,"")  + ',' + SV_SNR.get(51,"")  + ',' + SV_Slip.get(51,"") +"\n")
 #      Files[System][Freq][Tracking].write(fields[0]+","+ fields[5] + "," + fields[10] + ","+ fields[9] + "," +fields[16+ band*10]+ "," +fields[18 + band*10] +"\n")
    else:
        pass

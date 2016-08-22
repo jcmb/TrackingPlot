@@ -9,7 +9,7 @@ end_time=-1
 interval=-1
 lines=0
 
-debug=1
+debug=0
 
 #print sys.argv[1]
 if os.path.isfile(sys.argv[1]):
@@ -23,11 +23,15 @@ else:
 
 Reader=csv.reader(X27)
 for row in Reader:
-#    print row
     lines+=1
+#    print lines
+#    print row
 
-    if (lines<4):
+    if (lines<5):
         continue
+
+    if (row[0]==""):
+       continue
 
     time=float(row[0])
 #    print time
@@ -62,7 +66,7 @@ if (debug) :
     sys.stderr.write("\n")
 
 if epochs < 1000:
-   decimate_to = 0 
+   decimate_to = interval
 elif epochs < 2000:
    decimate_to = 2 * interval
 elif epochs < 3000:
@@ -96,6 +100,7 @@ elif epochs < 110000:
 else:
    decimate_to = 120 * interval
 
+decimate_to*=1000
 sys.stderr.write(str(decimate_to))
 sys.stderr.write("\n")
 print "Decimate="+str(decimate_to)+"; interval="+str(interval)

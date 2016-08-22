@@ -20,7 +20,10 @@ Writer=csv.writer(sys.stdout)
 if decimate_to == 0 :
     for row in Reader:
         lines+=1
-        if (lines<4):
+        if (lines<5):
+            continue
+
+        if (row[0]==""):
             continue
 
         Writer.writerow(row)
@@ -30,6 +33,9 @@ else:
         lines+=1
         if (lines<4):
             print row
+            continue
+
+        if (row[0]==""):
             continue
 
         time=int(float(row[0])*1000)

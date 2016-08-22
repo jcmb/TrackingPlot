@@ -1,5 +1,7 @@
 <span id="GPS">GPS:<br/></span><p/>
 <span id="GLONASS">GLONASS:<br/></span><p/>
+<span id="GAL">Galileo:<br/></span><p/>
+<span id="BDS">BeiDou:<br/></span><p/>
 <span id="SBAS">SBAS:<br/></span><p/>
 
 <a href="SNR_Plot.shtml">All SV's SNR plot</a><br/>
@@ -37,6 +39,27 @@ $(document).ready(function() {
         click: createCallback("GLONASS",i),
         }).appendTo("#GLONASS");
      }
+
+  for(i = 1; i <=30; i++) {
+     $('<button/>', {
+        text: i, //set text 1 to 10
+        id: 'GAL-'+i,
+        class: 'btn-tiny',
+        disabled: true,
+        click: createCallback("GAL",i),
+        }).appendTo("#GAL");
+     }
+
+  for(i = 1; i <=35; i++) {
+     $('<button/>', {
+        text: i, //set text 1 to 10
+        id: 'BDS-'+i,
+        class: 'btn-tiny',
+        disabled: true,
+        click: createCallback("BDS",i),
+        }).appendTo("#BDS");
+     }
+
 
   var SBAS_Names= [
       "EGNOS - AOR-E",
@@ -108,6 +131,8 @@ $.get(File_Name, function(data) {
      var first_line=true;
      var Got_GPS=false
      var Got_GLONASS=false
+     var Got_GAL=false
+     var Got_BDS=false
      var Got_SBAS=false
 
      $.each(lines, function(lineNo, line) {
@@ -124,6 +149,15 @@ $.get(File_Name, function(data) {
             if (!Got_GLONASS && (name[0] == "GLONASS")) {
                Got_GLONASS=true
                }
+
+            if (!Got_GAL && (name[0] == "GAL")) {
+               Got_GAL=true
+               }
+
+            if (!Got_BDS && (name[0] == "BDS")) {
+               Got_BDS=true
+               }
+
             if (!Got_SBAS && (name[0] == "SBAS")) {
                Got_SBAS=true
                }
@@ -140,9 +174,19 @@ $.get(File_Name, function(data) {
     if (! Got_GPS ) {
        $("#GPS").hide();
        }
+
     if (! Got_GLONASS ) {
        $("#GLONASS").hide();
        }
+
+    if (! Got_GAL ) {
+       $("#GAL").hide();
+       }
+
+    if (! Got_BDS ) {
+       $("#BDS").hide();
+       }
+
     if (! Got_SBAS ) {
        $("#SBAS").hide();
        }

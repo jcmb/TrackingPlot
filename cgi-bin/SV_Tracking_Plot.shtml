@@ -63,6 +63,14 @@ ogo"> </a>
         Max_Bands=4;
         }
 
+    if (System == "GAL") {
+        Max_Bands=2;
+        }
+
+    if (System == "BDS") {
+        Max_Bands=2;
+        }
+
     if (System == "SBAS") {
         Max_Bands=2;
         }
@@ -138,7 +146,7 @@ ogo"> </a>
 
                 if (this.point.Az) {
                    return '<b>'+ this.series.name +'<\/b><br/>'
-                   +' Az: ' +this.point.Az +' SNR: ' +this.point.SNR;
+                   +' Az: ' +this.point.Az + ' Elev: ' + this.point.y +' SNR: ' +this.point.SNR;
                    }
                 else {
                    return '<b>'+ this.series.name +'<\/b><br/>'
@@ -228,9 +236,19 @@ ogo"> </a>
 //        options.yAxis[0].categories[4]="L2 P"
         }
 
+    if (System == "GAL") {
+        options.series[1].name="E1 C/A"
+        options.series[2].name="E5 AltBoc"
+        }
+
+    if (System == "BDS") {
+        options.series[1].name="B1"
+        options.series[2].name="B2"
+        }
+
 
     File_Name=System + "-" + SV +".SNR-SV";
-//    console.log(File_Name)
+    console.log(File_Name)
 
     $.ajax({
       xhrFields: {
@@ -261,7 +279,7 @@ ogo"> </a>
             var items = line.split(',');
 
             if (items[0]) {
-//		console.log(items[0],parseFloat(items[1]),items[2],items[3])		 
+		console.log(items[0],parseFloat(items[1]),items[2],items[3])		 
                 options.series[0].data.push({
                      x:items[0],
                      y:parseFloat(items[1]),
@@ -272,7 +290,7 @@ ogo"> </a>
                 for (var i=1;i<=Max_Bands;i++) {
                     if (items[2+(i*2)]) {
                         current_slip=parseInt(items[2+(i*2)])
-                        if ((last_slip[i]==-1) || (last_slip[i]==current_slip)) {
+                        if ((last_slip[i]==-1) || (last_slip[i]==current_slip) || (Math.abs(last_slip[i]-current_slip)>5)) {
                             options.series[i].data.push({
                                 x:items[0],
                                 y:parseInt(items[1+(i*2)]),

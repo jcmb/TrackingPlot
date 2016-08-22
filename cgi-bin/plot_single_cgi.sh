@@ -1,5 +1,8 @@
 #! /bin/bash
-#echo $1 "*" $2 "*" $3 "*" $4 "*" $5 "*<br>"
+# File Name, Ext, TrimbleTools, Decimate, Project
+logger "plot_single_cgi.sh $1 $2 $3 $4 $5"
+echo $1 " " $2 " " $3 " " $4 " " $5 "<br>"
+ViewDat=viewdat
 Ext=$2
 FileFull=`basename $1`;
 File=`basename $1 $2`;
@@ -26,7 +29,6 @@ else
 fi
 
 
-
 #set -o verbose
 #set -o xtrace
 
@@ -35,65 +37,75 @@ fi
 echo $File > file.html
 echo "Creating Week File"
 WEEK=-2
-WEEK=`viewdat -d19 $1 | Week_From_T19.pl`
+WEEK=`$ViewDat -d19 $1 | Week_From_T19.pl`
 echo GPS Week: $WEEK
 #echo $TMP_DIR/$$.X27
 
+if [ ! -f $1 ] 
+then
+   logger $1 " Does not exist"
+   exit 100
+else
+logger $1 " Does exist"
+fi
+
 echo Creating x27 file for $File
-viewdat -d27 -x -o$TMP_DIR/$$.x27 $1 
 
 echo "Decimation interval: " $Decimate
+
 if [ "$Decimate" = -1 ]
 then
+   $ViewDat -d27 -x --translate_rec35_sub19_to_rec27 -o$TMP_DIR/$$.x27 $1 
    echo "Computing decimation interval" 
    eval $(compute_decimate.py $TMP_DIR/$$.x27)
+   rm $TMP_DIR/$$.x27
 fi
 
 if [ $Decimate = 0 ]
 then
     echo "No Decimation"
     echo "All Data, Interval($interval)">Decimation
+    echo "Creating SNRs file for $File"
+    $ViewDat -d27 --translate_rec35_sub19_to_rec27 -x $1 | X27_SNRs.py $WEEK
 else
     echo "Decimation interval: " $Decimate
     echo "Orginal interval: " $interval
     echo "Every: $Decimate (s), orginal ($interval)">Decimation
+    echo "Creating SNRs file for $File"
+    $ViewDat --dec=$Decimate -d27 --translate_rec35_sub19_to_rec27 -x $1 | X27_SNRs.py $WEEK
 fi
-
-
-echo Creating SNRs file for $File
-decimate.py $Decimate <$TMP_DIR/$$.x27 | X27_SNRs.py $WEEK
 
 
 
 echo "Computing Bands used"
-Calc_Bands.py >Tracked.Bands
+Calc_Bands.py | sort >Tracked.Bands
 
-if [ ! -s Tracked.Bands ]
-then
-   echo "Bands files not created, trying again"
-   echo Creating SNRs file for $File
-   decimate.py $Decimate <$TMP_DIR/$$.x27 | X27_SNRs.py $WEEK
-   echo "Computing Bands used"
-   Calc_Bands.py >Tracked.Bands
-
-   if [ ! -s Tracked.Bands ]
-   then
-      echo "Bands files not created, please try uploading again "
-      exit 4
-   fi
-fi
-
-rm $TMP_DIR/$$.x27
 
 echo "Computing SV used"
-Calc_SVs.py >Tracked.SVs
+Calc_SVs.py | sort >Tracked.SVs
+
 echo "Computing Stats"
 SNR_STATS.py
 
+echo "Plotting Singles"
+logger "Plotting Singles"
+Plot_Single_SVs.py $File | gnuplot&
+
+echo "Plotting All"
+logger "Plotting all"
+Plot_All_SVs.py $File | gnuplot&
+
+wait
+
+SNR_Warning.sh $File >Low_SNRs.html
+
 #mv $$.x29 $File.X29
-mv $1 $FileFull
+#mv $1 $FileFull
+rm $1
+
 
 echo Processing completed
+logger "Processing completed"
 ln -s $normalDir/SNR_Plot.shtml
 ln -s $normalDir/Tracking_Plot.shtml
 ln -s $normalDir/Slips_Plot.shtml
